@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token dApp</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Token Dashboard</h1>
+    <button id="connectBtn">Connect Wallet</button>
+    <p id="walletAddress"></p>
+
+    <section>
+        <h2>ERC-20: <span id="tokenInfo">...</span></h2>
+        <p>Balance: <span id="tokenBalance">0</span></p>
+        <hr>
+        <h3>Transfer</h3>
+        <input type="text" id="transferTo" placeholder="Recipient (0x...)">
+        <input type="number" id="transferAmount" placeholder="Amount">
+        <button id="transferBtn">Transfer</button>
+        <div id="erc20Result" class="result"></div>
+    </section>
+
+    <section>
+        <h2>ERC-721 Inventory</h2>
+        <p>Owned: <span id="nftCount">0</span></p>
+        <div id="nftList"></div>
+    </section>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
