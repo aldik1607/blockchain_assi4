@@ -8,7 +8,7 @@
 module.exports = {
   
   aldik: {
-    name: "Coffee Token",
+    name: "CoffeeToken",
     symbol: "CFT",
     initialSupply: 2_000_000, // 2 million tokens
   },

@@ -9,8 +9,8 @@ const hre = require("hardhat");
  */
 async function main() {
   // Get token parameters from environment variables or use defaults
-  const tokenName = process.env.TOKEN_NAME || "MyToken";
-  const tokenSymbol = process.env.TOKEN_SYMBOL || "MTK";
+  const tokenName = process.env.TOKEN_NAME || "CoffeeToken";
+  const tokenSymbol = process.env.TOKEN_SYMBOL || "CFT";
   const initialSupply = process.env.INITIAL_SUPPLY ? 
     BigInt(process.env.INITIAL_SUPPLY) : BigInt(1_000_000);
 

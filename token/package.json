@@ -6,8 +6,10 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "node": "npx hardhat node",
-    "deploy": "npx hardhat run scripts/deploy.js --network localhost",
-    "deploy:token": "npx hardhat run scripts/deploy-token.js --network localhost",
+    "deploy": "npx hardhat run scripts/deploy/deploy.js --network localhost",
+    "deploy:token": "npx hardhat run scripts/deploy/deploy-token.js --network localhost",
+    "erc721-test": "npx hardhat test scripts/test/nft.test.js",
+    "erc20-test":  "npx hardhat test scripts/test/token.test.js",
     "test": "npx hardhat test"
   },
   "keywords": [],
