@@ -1,8 +1,10 @@
 import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
 
-const ERC20_ADDRESS = "YOUR_ERC20_ADDRESS";
-const ERC721_ADDRESS = "YOUR_ERC721_ADDRESS";
+// Deployed to current Hardhat localhost node
+const ERC20_ADDRESS = "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707";
+const ERC721_ADDRESS = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
 
+// Minimal ERC‑20 ABI for dashboard interactions
 const ERC20_ABI = [
     "function name() view returns (string)",
     "function symbol() view returns (string)",
@@ -11,70 +13,130 @@ const ERC20_ABI = [
     "function transfer(address to, uint256 amount) returns (bool)"
 ];
 
+// Matches your NFT.sol (no Enumerable)
 const ERC721_ABI = [
-    "function balanceOf(address) view returns (uint256)",
-    "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)",
-    "function tokenURI(uint256) view returns (string)"
+    "function balanceOf(address owner) view returns (uint256)",
+    "function ownerOf(uint256 tokenId) view returns (address)",
+    "function tokenURI(uint256 tokenId) view returns (string)",
+    "function totalSupply() view returns (uint256)"
 ];
 
-let provider, signer, account;
+let provider, signer, account, erc20Decimals = 18;
 
 async function init() {
-    if (window.ethereum) {
-        provider = new ethers.BrowserProvider(window.ethereum);
-        document.getElementById('connectBtn').onclick = connectWallet;
+    if (!window.ethereum) {
+        alert("MetaMask (or another Web3 wallet) is required.");
+        return;
     }
+
+    provider = new ethers.BrowserProvider(window.ethereum);
+    document.getElementById("connectBtn").onclick = connectWallet;
 }
 
 async function connectWallet() {
-    signer = await provider.getSigner();
-    account = await signer.getAddress();
-    document.getElementById('walletAddress').innerText = account;
-    loadERC20();
-    loadERC721();
+    try {
+        await provider.send("eth_requestAccounts", []);
+        signer = await provider.getSigner();
+        account = await signer.getAddress();
+        document.getElementById("walletAddress").innerText = account;
+
+        await loadERC20();
+        await loadERC721();
+    } catch (err) {
+        console.error(err);
+        alert("Failed to connect wallet. Check MetaMask.");
+    }
 }
+
+// ---------- ERC‑20 ----------
 
 async function loadERC20() {
     const contract = new ethers.Contract(ERC20_ADDRESS, ERC20_ABI, provider);
-    const name = await contract.name();
-    const symbol = await contract.symbol();
-    const balance = await contract.balanceOf(account);
-    const decimals = await contract.decimals();
 
-    document.getElementById('tokenInfo').innerText = `${name} (${symbol})`;
-    document.getElementById('tokenBalance').innerText = ethers.formatUnits(balance, decimals);
+    const [name, symbol, balance, decimals] = await Promise.all([
+        contract.name(),
+        contract.symbol(),
+        contract.balanceOf(account),
+        contract.decimals()
+    ]);
+
+    erc20Decimals = Number(decimals);
+
+    document.getElementById("tokenInfo").innerText = `${name} (${symbol})`;
+    document.getElementById("tokenBalance").innerText = ethers.formatUnits(
+        balance,
+        erc20Decimals
+    );
 }
 
-document.getElementById('transferBtn').onclick = async () => {
-    const to = document.getElementById('transferTo').value;
-    const amount = document.getElementById('transferAmount').value;
-    const contract = new ethers.Contract(ERC20_ADDRESS, ERC20_ABI, signer);
-    
+document.getElementById("transferBtn").onclick = async () => {
+    if (!signer) {
+        alert("Connect your wallet first.");
+        return;
+    }
+
+    const to = document.getElementById("transferTo").value.trim();
+    const amount = document.getElementById("transferAmount").value.trim();
+    const resultDiv = document.getElementById("erc20Result");
+    resultDiv.innerText = "";
+
+    if (!to || !amount) {
+        resultDiv.innerText = "Please enter recipient and amount.";
+        return;
+    }
+
     try {
-        const tx = await contract.transfer(to, ethers.parseUnits(amount, 18));
-        document.getElementById('erc20Result').innerText = "Tx Hash: " + tx.hash;
+        const contract = new ethers.Contract(ERC20_ADDRESS, ERC20_ABI, signer);
+        const tx = await contract.transfer(
+            to,
+            ethers.parseUnits(amount, erc20Decimals)
+        );
+        resultDiv.innerText = "Pending Tx Hash: " + tx.hash;
         await tx.wait();
-        loadERC20();
+        resultDiv.innerText = "Confirmed Tx Hash: " + tx.hash;
+        await loadERC20();
     } catch (err) {
         console.error(err);
+        resultDiv.innerText = "Error: " + (err.message || err);
     }
 };
 
+// ---------- ERC‑721 (NFT) ----------
+
 async function loadERC721() {
     const contract = new ethers.Contract(ERC721_ADDRESS, ERC721_ABI, provider);
-    const balance = await contract.balanceOf(account);
-    document.getElementById('nftCount').innerText = balance.toString();
 
-    const listDiv = document.getElementById('nftList');
+    const total = await contract.totalSupply(); // total minted so far
+
+    const listDiv = document.getElementById("nftList");
     listDiv.innerHTML = "";
 
-    for (let i = 0; i < balance; i++) {
-        const tokenId = await contract.tokenOfOwnerByIndex(account, i);
-        const uri = await contract.tokenURI(tokenId);
-        const item = document.createElement('div');
-        item.innerHTML = `ID: ${tokenId} - <small>${uri}</small>`;
-        listDiv.appendChild(item);
+    let ownedCount = 0;
+
+    for (let tokenId = 0; tokenId < total; tokenId++) {
+        try {
+            const owner = await contract.ownerOf(tokenId);
+            if (owner.toLowerCase() !== account.toLowerCase()) {
+                continue;
+            }
+
+            ownedCount++;
+            const uri = await contract.tokenURI(tokenId);
+
+            const item = document.createElement("div");
+            item.className = "nft-item";
+            item.innerHTML = `
+                <strong>Token ID:</strong> ${tokenId}<br/>
+                <strong>Owner:</strong> ${owner}<br/>
+                <strong>Metadata URI:</strong> <small>${uri}</small>
+            `;
+            listDiv.appendChild(item);
+        } catch (err) {
+            console.error("Error loading token", tokenId, err);
+        }
     }
+
+    document.getElementById("nftCount").innerText = ownedCount.toString();
 }
 
 init();
