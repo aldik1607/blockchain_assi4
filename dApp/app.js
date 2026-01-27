@@ -1,10 +1,8 @@
 import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
 
-// Deployed to current Hardhat localhost node
-const ERC20_ADDRESS = "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707";
-const ERC721_ADDRESS = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
+const ERC20_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"; 
+const ERC721_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 
-// Minimal ERC‑20 ABI for dashboard interactions
 const ERC20_ABI = [
     "function name() view returns (string)",
     "function symbol() view returns (string)",
@@ -13,7 +11,6 @@ const ERC20_ABI = [
     "function transfer(address to, uint256 amount) returns (bool)"
 ];
 
-// Matches your NFT.sol (no Enumerable)
 const ERC721_ABI = [
     "function balanceOf(address owner) view returns (uint256)",
     "function ownerOf(uint256 tokenId) view returns (address)",
