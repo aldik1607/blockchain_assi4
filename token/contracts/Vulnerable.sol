@@ -14,7 +14,9 @@ contract VulnerableBank {
         (bool ok, ) = msg.sender.call{value: _amount}("");
         require(ok, "ETH transfer failed");
 
-        balances[msg.sender] -= _amount;
+        unchecked {
+            balances[msg.sender] -= _amount;
+        }
     }
 
     function getBankBalance() external view returns (uint256) {
