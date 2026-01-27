@@ -1,15 +1,15 @@
-// scripts/deploySimpleNFT.js
+// scripts/deployNFT.js
 const hre = require("hardhat");
 
 async function main() {
-  console.log("Deploying SimpleNFT contract...");
+  console.log("Deploying NFT contract...");
   
   const [owner, user1, user2] = await hre.ethers.getSigners();
   
   console.log("Deployer account:", owner.address);
   
-  const SimpleNFT = await hre.ethers.getContractFactory("SimpleNFT");
-  const nft = await SimpleNFT.deploy();
+  const NFT = await hre.ethers.getContractFactory("NFT");
+  const nft = await NFT.deploy();
   await nft.waitForDeployment();
   
   const contractAddress = await nft.getAddress();
@@ -34,7 +34,6 @@ async function main() {
     console.log("  Token ID:", i);
   }
   
-  // Display all NFT information
   console.log("\n===== ALL NFT INFORMATION =====");
   console.log("Total NFTs minted:", (await nft.totalSupply()).toString());
   
@@ -50,7 +49,6 @@ async function main() {
     }
   }
   
-  // Test security - try to mint as non-owner
   console.log("\nTesting security - non-owner mint attempt:");
   try {
     const hackerTx = await nft.connect(user1).mintNFT(user1.address, "ipfs://hack.json");
@@ -63,7 +61,7 @@ async function main() {
   console.log("\nDeployment completed successfully!");
   console.log("\nTo interact with contract in console:");
   console.log(`npx hardhat console --network localhost`);
-  console.log(`const nft = await ethers.getContractAt("SimpleNFT", "${contractAddress}")`);
+  console.log(`const nft = await ethers.getContractAt("NFT", "${contractAddress}")`);
   console.log(`await nft.totalSupply()`);
   console.log(`await nft.tokenURI(0)`);
   console.log(`await nft.getOwner(0)`);
