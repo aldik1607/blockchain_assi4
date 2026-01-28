@@ -1,5 +1,5 @@
 const hre = require("hardhat");
-const tokensConfig = require("../tokens.config.js");
+const tokensConfig = require("../../tokens.config.js");
 
 /**
  * Deploy Token from Configuration File

@@ -102,7 +102,6 @@ describe("NFT (ERC-721) Tests", function () {
       const tx2 = await nft.mintNFT(addr1.address, TOKEN_URI2);
       const receipt2 = await tx2.wait();
       
-      // Token IDs should be 0, 1, 2...
       expect(await nft.ownerOf(0)).to.equal(addr1.address);
       expect(await nft.ownerOf(1)).to.equal(addr1.address);
     });
