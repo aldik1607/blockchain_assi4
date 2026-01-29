@@ -1,7 +1,7 @@
 import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
 
-const ERC20_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"; 
-const ERC721_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+const ERC20_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; 
+const ERC721_ADDRESS = "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853";
 
 const ERC20_ABI = [
     "function name() view returns (string)",
@@ -13,7 +13,7 @@ const ERC20_ABI = [
 
 const ERC721_ABI = [
     "function balanceOf(address owner) view returns (uint256)",
-    "function ownerOf(uint256 tokenId) view returns (address)",
+    "function getOwner(uint256 tokenId) view returns (address)", 
     "function tokenURI(uint256 tokenId) view returns (string)",
     "function totalSupply() view returns (uint256)"
 ];
@@ -27,6 +27,8 @@ async function init() {
     }
 
     provider = new ethers.BrowserProvider(window.ethereum);
+    const network = await provider.getNetwork();
+    console.log("Подключено к сети с Chain ID:", network.chainId);
     document.getElementById("connectBtn").onclick = connectWallet;
 }
 
@@ -48,22 +50,31 @@ async function connectWallet() {
 // ---------- ERC‑20 ----------
 
 async function loadERC20() {
-    const contract = new ethers.Contract(ERC20_ADDRESS, ERC20_ABI, provider);
+    try {
+        const currentAccount = await signer.getAddress();
+        console.log("Запрашиваю баланс для:", currentAccount);
 
-    const [name, symbol, balance, decimals] = await Promise.all([
-        contract.name(),
-        contract.symbol(),
-        contract.balanceOf(account),
-        contract.decimals()
-    ]);
+        const contract = new ethers.Contract(ERC20_ADDRESS, ERC20_ABI, provider);
 
-    erc20Decimals = Number(decimals);
+        const [name, symbol, balance, decimals] = await Promise.all([
+            contract.name(),
+            contract.symbol(),
+            contract.balanceOf(currentAccount),
+            contract.decimals()
+        ]);
 
-    document.getElementById("tokenInfo").innerText = `${name} (${symbol})`;
-    document.getElementById("tokenBalance").innerText = ethers.formatUnits(
-        balance,
-        erc20Decimals
-    );
+        console.log(`Данные контракта: Name=${name}, Decimals=${decimals}, RawBalance=${balance}`);
+
+        erc20Decimals = Number(decimals);
+        
+        document.getElementById("tokenInfo").innerText = `${name} (${symbol})`;
+        
+        const formattedBalance = ethers.formatUnits(balance, erc20Decimals);
+        document.getElementById("tokenBalance").innerText = formattedBalance;
+
+    } catch (err) {
+        console.error("Ошибка в loadERC20:", err);
+    }
 }
 
 document.getElementById("transferBtn").onclick = async () => {
@@ -103,7 +114,7 @@ document.getElementById("transferBtn").onclick = async () => {
 async function loadERC721() {
     const contract = new ethers.Contract(ERC721_ADDRESS, ERC721_ABI, provider);
 
-    const total = await contract.totalSupply(); // total minted so far
+    const total = await contract.totalSupply(); 
 
     const listDiv = document.getElementById("nftList");
     listDiv.innerHTML = "";
@@ -112,7 +123,7 @@ async function loadERC721() {
 
     for (let tokenId = 0; tokenId < total; tokenId++) {
         try {
-            const owner = await contract.ownerOf(tokenId);
+            const owner = await contract.getOwner(tokenId);
             if (owner.toLowerCase() !== account.toLowerCase()) {
                 continue;
             }

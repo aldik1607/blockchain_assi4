@@ -6,14 +6,14 @@ contract Expensive {
 
     function addNumbers(uint256[] memory nums) public {
         for (uint i = 0; i < nums.length; i++) {
-            numbers.push(nums[i]); // каждый push — дорого
+            numbers.push(nums[i]); 
         }
     }
 
     function sum() public view returns (uint256) {
         uint256 total = 0;
         for (uint i = 0; i < numbers.length; i++) {
-            total += numbers[i]; // loop over storage — дорого
+            total += numbers[i]; 
         }
         return total;
     }
